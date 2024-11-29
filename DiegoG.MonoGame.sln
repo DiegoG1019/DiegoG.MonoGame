@@ -1,0 +1,48 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiegoG.MonoGame.Common", "DiegoG.MonoGame.Common\DiegoG.MonoGame.Common.csproj", "{4133E7E0-F49E-4958-897E-E86D09AB9DCE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiegoG.MonoGame.Extended", "DiegoG.MonoGame.Extended\DiegoG.MonoGame.Extended.csproj", "{9F287CFD-4E45-44BD-8EFB-F71A21826BE3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DiegoG.MonoGame.Penumbra", "DiegoG.MonoGame.Penumbra\DiegoG.MonoGame.Penumbra.csproj", "{836D1084-2690-497C-8299-1D8FF24F0225}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MonoGame.Extended", "MonoGame.Extended", "{363DCDED-ADE7-45CB-B71D-E5F0BD033BD4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Extended", "..\MonoGame.Extended\source\MonoGame.Extended\MonoGame.Extended.csproj", "{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4133E7E0-F49E-4958-897E-E86D09AB9DCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4133E7E0-F49E-4958-897E-E86D09AB9DCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4133E7E0-F49E-4958-897E-E86D09AB9DCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4133E7E0-F49E-4958-897E-E86D09AB9DCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F287CFD-4E45-44BD-8EFB-F71A21826BE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F287CFD-4E45-44BD-8EFB-F71A21826BE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F287CFD-4E45-44BD-8EFB-F71A21826BE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F287CFD-4E45-44BD-8EFB-F71A21826BE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{836D1084-2690-497C-8299-1D8FF24F0225}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{836D1084-2690-497C-8299-1D8FF24F0225}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{836D1084-2690-497C-8299-1D8FF24F0225}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{836D1084-2690-497C-8299-1D8FF24F0225}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D} = {363DCDED-ADE7-45CB-B71D-E5F0BD033BD4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB0DDE58-6C16-4F24-A85E-91252E02E456}
+	EndGlobalSection
+EndGlobal
