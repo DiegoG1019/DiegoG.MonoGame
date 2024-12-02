@@ -32,6 +32,12 @@ public class SpacePositionable : ISpacePositionable
         set => Position = ISpacePositionable.ConvertToAbsolutePosition(this, value);
     }
 
+    public Vector2 GetAbsolutePositionIn(ISpace space)
+        => ISpacePositionable.TranslateSpace(Position, space.InverseTransform);
+
+    public Vector2 GetAbsolutePositionIn(Matrix inverseTransformMatrix)
+        => ISpacePositionable.TranslateSpace(Position, inverseTransformMatrix);
+
     public virtual ISpace? Space { get; set; }
     public virtual Vector2 Position { get; set; }
 }

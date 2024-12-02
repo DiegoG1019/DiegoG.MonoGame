@@ -5,8 +5,10 @@ using System.Collections.Generic;
 
 namespace DiegoG.MonoGame.Common;
 
-public class StatefulSpriteBatch(GraphicsDevice graphicsDevice) : SpriteBatch(graphicsDevice)
+public class StatefulSpriteBatch : SpriteBatch, ISpace
 {
+    public StatefulSpriteBatch(GraphicsDevice graphicsDevice) : base(graphicsDevice) { }
+
     private ConcurrentDictionary<string, object>? stateVault;
 
     public SpriteSortMode SortMode { get; set; }
@@ -30,4 +32,6 @@ public class StatefulSpriteBatch(GraphicsDevice graphicsDevice) : SpriteBatch(gr
     {
         Begin(SortMode, BlendState, SamplerState, DepthStencilState, RasterizerState, Effect, TransformationMatrix);
     }
+
+    Matrix ISpace.Transform => TransformationMatrix;
 }
