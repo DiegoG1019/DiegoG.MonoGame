@@ -24,6 +24,14 @@ public interface ISpacePositionable : IPositionable
             : positionable.Position;
 }
 
+public interface ISpace
+{
+    public Matrix Transform { get; }
+    public Matrix InverseTransform => Matrix.Invert(Transform);
+}
+
+#region Implementations
+
 public class SpacePositionable : ISpacePositionable
 {
     public Vector2 AbsolutePosition
@@ -42,8 +50,40 @@ public class SpacePositionable : ISpacePositionable
     public virtual Vector2 Position { get; set; }
 }
 
-public interface ISpace
+public class SpacePositionableGameComponent(Game game) : GameComponent(game), ISpacePositionable
 {
-    public Matrix Transform { get; }
-    public Matrix InverseTransform => Matrix.Invert(Transform);
+    public Vector2 AbsolutePosition
+    {
+        get => ISpacePositionable.GetAbsolutePosition(this);
+        set => Position = ISpacePositionable.ConvertToAbsolutePosition(this, value);
+    }
+
+    public Vector2 GetAbsolutePositionIn(ISpace space)
+        => ISpacePositionable.TranslateSpace(Position, space.InverseTransform);
+
+    public Vector2 GetAbsolutePositionIn(Matrix inverseTransformMatrix)
+        => ISpacePositionable.TranslateSpace(Position, inverseTransformMatrix);
+
+    public virtual ISpace? Space { get; set; }
+    public virtual Vector2 Position { get; set; }
 }
+
+public class SpacePositionableDrawableGameComponent(Game game) : DrawableGameComponent(game), ISpacePositionable
+{
+    public Vector2 AbsolutePosition
+    {
+        get => ISpacePositionable.GetAbsolutePosition(this);
+        set => Position = ISpacePositionable.ConvertToAbsolutePosition(this, value);
+    }
+
+    public Vector2 GetAbsolutePositionIn(ISpace space)
+        => ISpacePositionable.TranslateSpace(Position, space.InverseTransform);
+
+    public Vector2 GetAbsolutePositionIn(Matrix inverseTransformMatrix)
+        => ISpacePositionable.TranslateSpace(Position, inverseTransformMatrix);
+
+    public virtual ISpace? Space { get; set; }
+    public virtual Vector2 Position { get; set; }
+}
+
+#endregion
