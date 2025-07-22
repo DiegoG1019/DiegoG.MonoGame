@@ -15,8 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\GLV.Shared\GLV.Shared.Common\GLV.Shared.Common.csproj" />
     <ProjectReference Include="..\..\MonoGame.Extended\source\MonoGame.Extended\MonoGame.Extended.csproj" />
-    <ProjectReference Include="..\DiegoG.MonoGame.Common\DiegoG.MonoGame.Common.csproj" />
   </ItemGroup>
 
 </Project>

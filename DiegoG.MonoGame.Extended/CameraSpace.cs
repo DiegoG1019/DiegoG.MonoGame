@@ -1,5 +1,4 @@
-﻿using DiegoG.MonoGame.Common;
-using MonoGame.Extended;
+﻿using MonoGame.Extended;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended.Graphics;
 using Microsoft.Xna.Framework.Content;

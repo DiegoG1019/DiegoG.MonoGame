@@ -1,15 +1,9 @@
-﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using System.Text;
+﻿using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 
-namespace DiegoG.MonoGame.Common.SystemTextJsonConverters;
+namespace DiegoG.MonoGame.Extended.SystemTextJsonConverters;
 
 public sealed class RectangleConverter : JsonConverter<Rectangle>
 {

@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using MonoGame.Extended;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public class ActivityAnchor : IPositionable
 {

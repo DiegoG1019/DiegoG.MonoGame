@@ -1,12 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MonoGame.Extended;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public static class GridExtensions
 {

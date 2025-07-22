@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public readonly struct MouseStateMemory
 {

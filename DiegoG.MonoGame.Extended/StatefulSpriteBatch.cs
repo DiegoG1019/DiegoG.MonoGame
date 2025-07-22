@@ -1,9 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Concurrent;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public class StatefulSpriteBatch : SpriteBatch, ISpace
 {
@@ -12,7 +11,7 @@ public class StatefulSpriteBatch : SpriteBatch, ISpace
     private ConcurrentDictionary<string, object>? stateVault;
 
     public SpriteSortMode SortMode { get; set; }
-    public Matrix TransformationMatrix { get; set; }
+    public Matrix TransformationMatrix { get; set; } = Matrix.Identity;
     public Effect? Effect { get; set; }
     public BlendState? BlendState { get; set; }
     public SamplerState? SamplerState { get; set; }

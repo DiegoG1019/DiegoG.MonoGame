@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public class MousePositionableComponent : GameComponent, ISpacePositionable
 {
@@ -13,10 +13,10 @@ public class MousePositionableComponent : GameComponent, ISpacePositionable
     public static Vector2 GetMousePosition(GameWindow? gameWindow)
         => (gameWindow is null ? Mouse.GetState() : Mouse.GetState(gameWindow)).Position.ToVector2();
 
-    public static Vector2 GetAbsolutePositionIn(ISpace space, GameWindow? gameWindow = null)
+    public static Vector2 GetRelativePositionIn(ISpace space, GameWindow? gameWindow = null)
         => ISpacePositionable.TranslateSpace(GetMousePosition(gameWindow), space.InverseTransform);
 
-    public static Vector2 GetAbsolutePositionIn(Matrix inverseTransform, GameWindow? gameWindow = null)
+    public static Vector2 GetRelativePositionIn(Matrix inverseTransform, GameWindow? gameWindow = null)
         => ISpacePositionable.TranslateSpace(GetMousePosition(gameWindow), inverseTransform);
 
     public Vector2 Position
@@ -29,10 +29,10 @@ public class MousePositionableComponent : GameComponent, ISpacePositionable
         }
     }
 
-    public Vector2 AbsolutePosition
+    public Vector2 RelativePosition
     {
-        get => ISpacePositionable.GetAbsolutePosition(this);
-        set => Position = ISpacePositionable.ConvertToAbsolutePosition(this, value);
+        get => ISpacePositionable.GetRelativePosition(this);
+        set => Position = ISpacePositionable.ConvertToRelativePosition(this, value);
     }
 
     public ISpace? Space { get; set; }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public sealed class DisposableObjectDictionary<T> : IReadOnlyDictionary<string, T>, IReadOnlyCollection<T>, IDisposable
     where T : IDisposable

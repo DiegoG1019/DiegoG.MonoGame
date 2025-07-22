@@ -1,12 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace DiegoG.MonoGame.Common;
+namespace DiegoG.MonoGame.Extended;
 
 public static class SpriteBatchExtensions
 {
     public const string WhitePixelTextureKey = "_whitepixeltexture";
-    private readonly static Color[] SingleWhitePixel = [Color.White];
+    private static readonly Color[] SingleWhitePixel = [Color.White];
 
     public static Texture2D GetWhitePixelTexture(this StatefulSpriteBatch batch)
     {
