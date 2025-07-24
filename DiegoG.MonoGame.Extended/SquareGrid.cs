@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoGame.Extended;
 
 namespace DiegoG.MonoGame.Extended;
 
@@ -17,8 +18,8 @@ public readonly record struct BoundedSquareGrid(SquareGrid Grid, int XCells, int
         {
             ArgumentOutOfRangeException.ThrowIfGreaterThan(x, XCells);
             ArgumentOutOfRangeException.ThrowIfGreaterThan(y, YCells);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(x);
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(y);
+            ArgumentOutOfRangeException.ThrowIfNegative(x);
+            ArgumentOutOfRangeException.ThrowIfNegative(y);
 
             return Grid.GetPosition(x, y);
         }
@@ -36,10 +37,10 @@ public readonly record struct BoundedSquareGrid(SquareGrid Grid, int XCells, int
         ArgumentOutOfRangeException.ThrowIfGreaterThan(x2, XCells);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(y1, YCells);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(y2, YCells);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(x1);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(y1);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(x2);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(y2);
+        ArgumentOutOfRangeException.ThrowIfNegative(x1);
+        ArgumentOutOfRangeException.ThrowIfNegative(y1);
+        ArgumentOutOfRangeException.ThrowIfNegative(x2);
+        ArgumentOutOfRangeException.ThrowIfNegative(y2);
 
         return Grid.GetArea(x1, y1, x2, y2, x1offset, y1offset, x2offset, y2offset);
     }
@@ -48,10 +49,42 @@ public readonly record struct BoundedSquareGrid(SquareGrid Grid, int XCells, int
     {
         ArgumentOutOfRangeException.ThrowIfGreaterThan(x, XCells);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(y, YCells);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(x);
-        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(y);
+        ArgumentOutOfRangeException.ThrowIfNegative(x);
+        ArgumentOutOfRangeException.ThrowIfNegative(y);
 
         return Grid.GetPosition(x, y, xoffset, yoffset);
+    }
+
+    public IEnumerable<Vector2> GetCells(GridPositionOffset xoffset = GridPositionOffset.None,
+        GridPositionOffset yoffset = GridPositionOffset.None)
+    {
+        for (int x = 0; x < XCells; x++)
+        for (int y = 0; y < YCells; y++)
+            yield return GetPosition(x, y, xoffset, yoffset);
+    }
+    
+    public IEnumerable<RectangleF> GetCellRectangles()
+    {
+        for (int x = 0; x < XCells; x++)
+        for (int y = 0; y < YCells; y++)
+            yield return new RectangleF(
+                x * Grid.XScale,
+                y * Grid.YScale,
+                Grid.XScale,
+                Grid.YScale
+            );
+    }
+    
+    public IEnumerable<Rectangle> GetCellIntRectangles()
+    {
+        for (int x = 0; x < XCells; x++)
+        for (int y = 0; y < YCells; y++)
+            yield return new Rectangle(
+                (int)(x * Grid.XScale),
+                (int)(y * Grid.YScale),
+                (int)(Grid.XScale),
+                (int)(Grid.YScale)
+            );
     }
 }
 

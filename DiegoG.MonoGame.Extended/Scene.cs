@@ -14,6 +14,16 @@ public class Scene : DrawableGameComponent
         SceneComponents.ComponentAdded += SceneComponentsOnComponentAdded;
         SceneComponents.ComponentRemoved += SceneComponentsOnComponentRemoved;
     }
+
+    protected bool ExchangeComponentProperty<T>(T? value, ref T? field) where T : GameComponent
+    {
+        if (value == field) return false;
+            
+        if (field is not null) SceneComponents.Remove(field);
+        SceneComponents.Add(value);
+        field = value;
+        return true;
+    }
     
     protected override void LoadContent()
     {

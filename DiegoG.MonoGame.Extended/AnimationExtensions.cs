@@ -1,5 +1,6 @@
 using System.Text;
 using GLV.Shared.Common;
+using ImGuiNET;
 using MonoGame.Extended.Animations;
 
 namespace DiegoG.MonoGame.Extended;
@@ -12,18 +13,18 @@ public static class AnimationExtensions
         controller.Unpause(true);
     }
 
-    public static void DebugDump(this IAnimationController controller, StringBuilder sb, int tabs)
+    public static void RenderImGuiDebug(this IAnimationController controller)
     {
         Span<char> buffer = stackalloc char[100];
-        
-        sb.AppendTabs(tabs).Append("IsPaused: ").Append(controller.IsPaused).AppendLine();
-        sb.AppendTabs(tabs).Append("IsAnimating: ").Append(controller.IsAnimating).AppendLine();
-        sb.AppendTabs(tabs).Append("IsLooping: ").Append(controller.IsLooping).AppendLine();
-        sb.AppendTabs(tabs).Append("IsReversed: ").Append(controller.IsReversed).AppendLine();
-        sb.AppendTabs(tabs).Append("IsPingPong: ").Append(controller.IsPingPong).AppendLine();
-        sb.AppendTabs(tabs).Append("Speed: ").Append(controller.Speed.ToStringSpan(buffer)).AppendLine();
-        sb.AppendTabs(tabs).Append("CurrentFrameTimeRemaining: ").Append(controller.CurrentFrameTimeRemaining.ToStringSpan(buffer)).AppendLine();
-        sb.AppendTabs(tabs).Append("CurrentFrame: ").Append(controller.CurrentFrame.ToStringSpan(buffer)).AppendLine();
-        sb.AppendTabs(tabs).Append("FrameCount: ").Append(controller.FrameCount.ToStringSpan(buffer)).AppendLine();
+
+        ImGui.LabelText("IsPaused", controller.IsPaused.ToString());
+        ImGui.LabelText("IsAnimating", controller.IsAnimating.ToString());
+        ImGui.LabelText("IsLooping", controller.IsLooping.ToString());
+        ImGui.LabelText("IsReversed", controller.IsReversed.ToString());
+        ImGui.LabelText("IsPingPong", controller.IsPingPong.ToString());
+        ImGui.LabelText("Speed", controller.Speed.ToStringSpan(buffer));
+        ImGui.LabelText("CurrentFrameTimeRemaining", controller.CurrentFrameTimeRemaining.ToStringSpan(buffer));
+        ImGui.LabelText("CurrentFrame", controller.CurrentFrame.ToStringSpan(buffer));
+        ImGui.LabelText("FrameCount", controller.FrameCount.ToStringSpan(buffer));
     }
 }
