@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections;
+using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 
 namespace DiegoG.MonoGame.Extended;
@@ -55,37 +56,15 @@ public readonly record struct BoundedSquareGrid(SquareGrid Grid, int XCells, int
         return Grid.GetPosition(x, y, xoffset, yoffset);
     }
 
-    public IEnumerable<Vector2> GetCells(GridPositionOffset xoffset = GridPositionOffset.None,
+    public GridCellsEnumerable GetCells(GridPositionOffset xoffset = GridPositionOffset.None,
         GridPositionOffset yoffset = GridPositionOffset.None)
-    {
-        for (int x = 0; x < XCells; x++)
-        for (int y = 0; y < YCells; y++)
-            yield return GetPosition(x, y, xoffset, yoffset);
-    }
-    
-    public IEnumerable<RectangleF> GetCellRectangles()
-    {
-        for (int x = 0; x < XCells; x++)
-        for (int y = 0; y < YCells; y++)
-            yield return new RectangleF(
-                x * Grid.XScale,
-                y * Grid.YScale,
-                Grid.XScale,
-                Grid.YScale
-            );
-    }
-    
-    public IEnumerable<Rectangle> GetCellIntRectangles()
-    {
-        for (int x = 0; x < XCells; x++)
-        for (int y = 0; y < YCells; y++)
-            yield return new Rectangle(
-                (int)(x * Grid.XScale),
-                (int)(y * Grid.YScale),
-                (int)(Grid.XScale),
-                (int)(Grid.YScale)
-            );
-    }
+        => new GridCellsEnumerable(this, xoffset, yoffset);
+
+    public GridRectanglesFEnumerable GetCellRectangles()
+        => new GridRectanglesFEnumerable(this);
+
+    public GridRectanglesEnumerable GetCellIntRectangles()
+        => new GridRectanglesEnumerable(this);
 }
 
 public readonly record struct SquareGrid(float XScale, float YScale)
@@ -145,4 +124,118 @@ public readonly record struct SquareGrid(float XScale, float YScale)
             GridPositionOffset.CellSize => scale,
             _ => throw new ArgumentException($"Unknown GridPositionOffset: {offset}")
         };
+}
+
+public struct GridRectanglesEnumerable(BoundedSquareGrid Grid) : IEnumerator<Rectangle>
+{
+    private int X;
+    private int Y;
+    
+    public bool MoveNext()
+    {
+        if (Y >= 100)
+        {
+            X++;
+            Y = 0;
+        }
+
+        if (X >= 100) return false;
+
+        Current = new Rectangle(
+            (int)(X * Grid.Grid.XScale),
+            (int)(Y++ * Grid.Grid.YScale),
+            (int)(Grid.Grid.XScale),
+            (int)(Grid.Grid.YScale)
+        );
+        
+        return true;
+    }
+
+    public void Reset()
+    {
+        X = 0;
+        Y = 0;
+    }
+
+    public Rectangle Current { get; private set; }
+    
+    object? IEnumerator.Current => Current;
+
+    public void Dispose(){}
+
+    public GridRectanglesEnumerable GetEnumerator() => this;
+}
+
+public struct GridRectanglesFEnumerable(BoundedSquareGrid Grid) : IEnumerator<RectangleF>
+{
+    private int X;
+    private int Y;
+    
+    public bool MoveNext()
+    {
+        if (Y >= 100)
+        {
+            X++;
+            Y = 0;
+        }
+
+        if (X >= 100) return false;
+
+        Current = new RectangleF(
+            X * Grid.Grid.XScale,
+            Y++ * Grid.Grid.YScale,
+            Grid.Grid.XScale,
+            Grid.Grid.YScale
+        );
+        
+        return true;
+    }
+
+    public void Reset()
+    {
+        X = 0;
+        Y = 0;
+    }
+
+    public RectangleF Current { get; private set; }
+    
+    object? IEnumerator.Current => Current;
+
+    public void Dispose(){}
+
+    public GridRectanglesFEnumerable GetEnumerator() => this;
+}
+
+public struct GridCellsEnumerable(BoundedSquareGrid Grid, GridPositionOffset XOffset, GridPositionOffset YOffset) : IEnumerator<Vector2>
+{
+    private int X;
+    private int Y;
+    
+    public bool MoveNext()
+    {
+        if (Y >= 100)
+        {
+            X++;
+            Y = 0;
+        }
+
+        if (X >= 100) return false;
+
+        Current = Grid.GetPosition(X, Y++, XOffset, YOffset);
+        return true;
+    }
+
+    public void Reset()
+    {
+        X = 0;
+        Y = 0;
+    }
+
+    public Vector2 Current { get; private set; }
+    
+    object? IEnumerator.Current => Current;
+
+    public void Dispose(){}
+
+    public GridCellsEnumerable GetEnumerator() => this;
 }
