@@ -60,6 +60,17 @@ public readonly record struct BoundedSquareGrid(SquareGrid Grid, int XCells, int
         GridPositionOffset yoffset = GridPositionOffset.None)
         => new GridCellsEnumerable(this, xoffset, yoffset);
 
+    public int TotalCells => XCells * YCells;
+    public float TotalArea => XCells * Grid.XScale * YCells * Grid.YScale;
+    public RectangleF TotalAreaRectangle => new RectangleF(0, 0, XCells * Grid.XScale, YCells * Grid.YScale);
+
+    public int CompareHorizontalBounds(int x) => x < 0 ? -1 : x >= XCells ? 1 : 0;
+    public int CompareVerticalBounds(int y) => y < 0 ? -1 : y >= YCells ? 1 : 0;
+    
+    public bool IsWithinHorizontalBounds(int x) => x >= 0 && x < XCells;
+    public bool IsWithinVerticalBounds(int y) => y >= 0 && y < YCells;
+    public bool IsWithinBounds(int x, int y) => IsWithinHorizontalBounds(x) && IsWithinVerticalBounds(y);
+    
     public GridRectanglesFEnumerable GetCellRectangles()
         => new GridRectanglesFEnumerable(this);
 

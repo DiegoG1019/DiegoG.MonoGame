@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 
@@ -6,6 +7,56 @@ namespace DiegoG.MonoGame.Extended;
 
 public sealed class DataGrid<T>(BoundedSquareGrid bounds)
 {
+    private T[,] _dat = new T[bounds.XCells, bounds.YCells];
+    public BoundedSquareGrid Bounds { get; } = bounds;
+    
+    public CellData this[int x, int y]
+    {
+        get
+        {
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(x, Bounds.XCells);
+            ArgumentOutOfRangeException.ThrowIfGreaterThan(y, Bounds.YCells);
+            ArgumentOutOfRangeException.ThrowIfNegative(x);
+            ArgumentOutOfRangeException.ThrowIfNegative(y);
+
+            return new CellData(this, x, y);
+        }
+    }
+
+    public CellDataEnumerator GetCells()
+        => new CellDataEnumerator(this);
+
+    public CellDataYFirstEnumerator GetCellsYFirst()
+        => new CellDataYFirstEnumerator(this);
+    
+    public struct CellDataYFirstEnumerator(DataGrid<T> grid)
+    {
+        private int x;
+        private int y;
+        
+        public CellDataYFirstEnumerator GetEnumerator() => this;
+
+        public bool MoveNext()
+        {
+            if (++y >= grid.Bounds.YCells)
+            {
+                x++;
+                y = 0;
+            }
+
+            if (x >= grid.Bounds.XCells) return false;
+            Current = new CellData(grid, x, y);
+            return true;
+        }
+
+        public void Reset()
+        {
+            x = y = 0;
+        }
+
+        public CellData Current { get; private set; }
+    }
+    
     public struct CellDataEnumerator(DataGrid<T> grid)
     {
         private int x;
@@ -15,13 +66,14 @@ public sealed class DataGrid<T>(BoundedSquareGrid bounds)
 
         public bool MoveNext()
         {
-            if (y >= 100)
+            if (++x >= grid.Bounds.XCells)
             {
-                x++;
-                y = 0;
+                y++;
+                x = 0;
             }
 
-            if (x >= 100) return false;
+            if (y >= grid.Bounds.YCells) return false;
+            
             Current = new CellData(grid, x, y);
             return true;
         }
@@ -64,25 +116,16 @@ public sealed class DataGrid<T>(BoundedSquareGrid bounds)
             (int)(grid.Bounds.Grid.YScale)
         );
 
-        public ref T Data => ref grid._dat[x, y];
-    }
-    
-    private T[,] _dat = new T[bounds.XCells, bounds.YCells];
-    public BoundedSquareGrid Bounds { get; } = bounds;
-    
-    public CellData this[int x, int y]
-    {
-        get
+        public ref T Data
         {
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(x, Bounds.XCells);
-            ArgumentOutOfRangeException.ThrowIfGreaterThan(y, Bounds.YCells);
-            ArgumentOutOfRangeException.ThrowIfNegative(x);
-            ArgumentOutOfRangeException.ThrowIfNegative(y);
-
-            return new CellData(this, x, y);
+            get
+            {
+                #if DEBUG
+                if (x < 0 || x >= grid._dat.GetLength(0) || y < 0 || y >= grid._dat.GetLength(1)) 
+                    Debugger.Break();
+                #endif
+                return ref grid._dat[x, y];
+            }
         }
     }
-
-    public CellDataEnumerator GetCells()
-        => new CellDataEnumerator(this);
 }
