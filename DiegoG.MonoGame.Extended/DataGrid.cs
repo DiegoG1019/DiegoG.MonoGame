@@ -7,8 +7,16 @@ namespace DiegoG.MonoGame.Extended;
 
 public sealed class DataGrid<T>(BoundedSquareGrid bounds)
 {
-    private T[,] _dat = new T[bounds.XCells, bounds.YCells];
+    #if DEBUG
+    public 
+    #else
+    private
+    #endif
+    T[,] _dat = new T[bounds.XCells, bounds.YCells];
+
     public BoundedSquareGrid Bounds { get; } = bounds;
+
+    public CellData this[Point point] => this[point.X, point.Y];
     
     public CellData this[int x, int y]
     {

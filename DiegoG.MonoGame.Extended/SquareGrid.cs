@@ -63,6 +63,7 @@ public readonly record struct BoundedSquareGrid(SquareGrid Grid, int XCells, int
     public int TotalCells => XCells * YCells;
     public float TotalArea => XCells * Grid.XScale * YCells * Grid.YScale;
     public RectangleF TotalAreaRectangle => new RectangleF(0, 0, XCells * Grid.XScale, YCells * Grid.YScale);
+    public Rectangle TotalCellsRectangle => new Rectangle(0, 0, XCells, YCells);
 
     public int CompareHorizontalBounds(int x) => x < 0 ? -1 : x >= XCells ? 1 : 0;
     public int CompareVerticalBounds(int y) => y < 0 ? -1 : y >= YCells ? 1 : 0;
