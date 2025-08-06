@@ -1,4 +1,6 @@
+using System.Buffers;
 using System.Diagnostics;
+using GLV.Shared.Common;
 using Microsoft.Xna.Framework;
 
 namespace DiegoG.MonoGame.Extended;
@@ -9,6 +11,8 @@ public class Scene : DrawableGameComponent
     private readonly List<IDrawable> drawables = [];
     private readonly List<IUpdateable> updateables = [];
 
+    private bool isloaded;
+    
     public Scene(Game game) : base(game)
     {
         SceneComponents.ComponentAdded += SceneComponentsOnComponentAdded;
@@ -27,7 +31,20 @@ public class Scene : DrawableGameComponent
     
     protected override void LoadContent()
     {
-        base.LoadContent();
+        var count = SceneComponents.Count;
+        var comparray = ArrayPool<IGameComponent>.Shared.Rent(count);
+        try
+        {
+            SceneComponents.CopyTo(comparray, 0);
+            Debug.Assert(count is 0 || count < comparray.Length);
+            isloaded = true;
+            for (int i = 0; i < count; i++)
+                comparray[i].Initialize();
+        }
+        finally
+        {
+            ArrayPool<IGameComponent>.Shared.Return(comparray);
+        }
     }
 
     public override void Update(GameTime gameTime)
@@ -118,8 +135,9 @@ public class Scene : DrawableGameComponent
                 AddSortedUpdateable(up);
                 up.UpdateOrderChanged += UpOnUpdateOrderChanged;
             }
-        
-        comp.Initialize();
+
+        if (isloaded)
+            comp.Initialize();
     }
 
     private void DrOnDrawOrderChanged(object? sender, EventArgs e)

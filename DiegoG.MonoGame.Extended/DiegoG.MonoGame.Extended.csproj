@@ -6,6 +6,7 @@
 	<Nullable>enable</Nullable>
 	<PublishReadyToRun>false</PublishReadyToRun>
 	<TieredCompilation>false</TieredCompilation>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
 	  <PackageReference Include="MessagePack" Version="2.5.192" />
