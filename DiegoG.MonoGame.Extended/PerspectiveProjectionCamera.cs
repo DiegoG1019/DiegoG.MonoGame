@@ -1,191 +1,541 @@
-// Code imported and modified from https://github.com/Atlanticity91/MonoVoxel/blob/master/MonoVoxel/Engine/Utils/MonoVoxelCamera.cs
-
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Extended;
+using Microsoft.Xna.Framework.Input;
 
 namespace DiegoG.MonoGame.Extended;
 
-public class PerspectiveProjectionCamera : IDebugExplorable
+// Based on https://community.monogame.net/t/fixed-and-free-3d-camera-code-example/11476
+
+public enum CameraType
 {
-    private Matrix m_projection = Matrix.Identity;
-    private Matrix m_view = Matrix.Identity;
-    private Matrix m_world = Matrix.Identity;
-    private Matrix m_transform;
+    Fixed,
+    Free
+}
 
-    private Vector3 m_up = new(0.0f, 1.0f, 0.0f);
-    private Vector3 m_right = new(1.0f, 0.0f, 0.0f);
-    private Vector3 m_forward = new(0.0f, 0.0f, -1.0f);
+public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebugExplorable
+{
+    public float MovementUnitsPerSecond { get; set; } = 30f;
+    public float RotationRadiansPerSecond { get; set; } = 60f;
 
-    private readonly float m_pitch_min = -MathHelper.ToRadians(89);
-    private readonly float m_pitch_max = MathHelper.ToRadians(89);
+    public float FieldOfView { get; set; } = float.DegreesToRadians(45);
 
-    public Vector3 Up => m_up;
-    public Vector3 Right => m_right;
-    public Vector3 Forward => m_forward;
+    public float FieldOfViewDegrees
+    {
+        get => float.RadiansToDegrees(FieldOfView);
+        set => FieldOfView = float.DegreesToRadians(value);
+    }
 
-    public Matrix Projection => m_projection;
-    public Matrix View => m_view;
-    public Matrix World => m_world;
-    public Matrix Transform => m_transform;
+    public float NearPlane { get; set; } = .05f;
+    public float FarPlane { get; set; } = 1000f;
 
-    public RectangleF CameraArea { get; private set; }
-    public Viewport CameraViewport { get; private set; }
-    public float FieldOfView { get; set; } = MathHelper.ToRadians(45);
-    public float Yaw { get; set; } = 0.0f;
-    public float Pitch { get; set; } = 0.0f;
-    public Vector3 Position { get; set; }
-    public float Far { get; set; } = 100.0f;
-    public float Near { get; set; } = 0.1f;
+    public CameraType CameraType { get; set; } = CameraType.Fixed;
+
+    public Vector3 TargetPosition { get; set; }
     
     /// <summary>
-    /// Rotate pitch.
+    /// Gets or sets the camera's position in the world.
     /// </summary>
-    /// <param name="delta_y" >Delta pitch in radians</param>
-    public void RotatePitch(float delta_y)
+    public Vector3 Position
     {
-        Pitch -= delta_y;
-        Pitch = Math.Clamp( Pitch, m_pitch_min, m_pitch_max );
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateWorldAndView();
+        }
+        get;
+    }
+    
+    /// <summary>
+    /// Gets or Sets the direction the camera is looking at in the world.
+    /// The forward is the same as the look at direction it is a directional vector not a position.
+    /// </summary>
+    public Vector3 Forward
+    {
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateWorldAndView();
+        }
+        get;
+    } = Vector3.Forward;
+
+    public Vector3 Backwards => -Forward;
+
+    /// <summary>
+    /// This serves as the cameras up. For fixed cameras this might not change at all ever. For free cameras it changes constantly.
+    /// A fixed camera keeps a fixed horizon but can gimble lock under normal rotation when looking straight up or down.
+    /// A free camera has no fixed horizon but can't gimble lock under normal rotation as the up changes as the camera moves.
+    /// Most hybrid cameras are a blend of the two but all are based on one or both of the above.
+    /// </summary>
+    public Vector3 Up
+    {
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateWorldAndView();
+        }
+        get;
+    } = Vector3.Up;
+
+    public Vector3 Down => -Up;
+
+    public Vector3 Right
+    {
+        set
+        {
+            if (field == value) return;
+            field = value;
+            InvalidateWorldAndView();
+        }
+        get;
+    } = Vector3.Right;
+
+    public Vector3 Left => -Right;
+    
+    /// <summary>
+    /// Directly set or get the world matrix this also updates the view matrix
+    /// </summary>
+    public Matrix World { get; private set; } = Matrix.Identity;
+
+    /// <summary>
+    /// Gets the view matrix we never really set the view matrix ourselves outside this method just get it.
+    /// The view matrix is remade internally when we know the world matrix forward or position is altered.
+    /// </summary>
+    public Matrix View { get; private set; } = Matrix.Identity;
+
+    /// <summary>
+    /// Gets the projection matrix.
+    /// </summary>
+    public Matrix Projection { get; private set; } = Matrix.Identity;
+    
+    /// <summary>
+    /// Gets a world matrix for 2D objects that shouldn't be skewed
+    /// </summary>
+    public Matrix World2D { get; private set; } = Matrix.Identity;
+
+    public Vector2 Center2D
+    {
+        get
+        {
+            var vp = Game.GraphicsDevice.Viewport;
+            return new(vp.Width / 2f, vp.Height / 2f);
+        }
+    }
+
+    private bool worldAndViewAreValid;
+    private bool projectionIsValid;
+
+    private void InvalidateWorldAndView() => worldAndViewAreValid = false;
+
+    private void InvalidateProjection() => projectionIsValid = false;
+
+    /// <summary>
+    /// update the camera.
+    /// </summary>
+    public override void Update(GameTime gameTime)
+    {
+        if (TargetPosition != Position)
+        {
+            Position += ((TargetPosition - Position) * MovementUnitsPerSecond) *
+                        (float)gameTime.ElapsedGameTime.TotalSeconds;
+        }
+
+        if (worldAndViewAreValid is false)
+        {
+            Up = CameraType switch
+            {
+                CameraType.Fixed => Vector3.Up,
+                CameraType.Free => World.Up,
+                _ => Up
+            };
+
+            World2D = Matrix.CreateTranslation(new(-Position.X, -Position.Z, 0));
+            World = Matrix.CreateWorld(default, Forward, Up);
+            View = Matrix.CreateLookAt(Position, Forward + Position, World.Up);
+            worldAndViewAreValid = true;
+        }
+
+        if (projectionIsValid is false)
+        {
+            Projection = Matrix.CreatePerspectiveFieldOfView(FieldOfView,
+                Game.GraphicsDevice.Viewport.AspectRatio,
+                NearPlane, FarPlane);
+            
+            projectionIsValid = true;
+        }
+    }
+
+    public override void Initialize()
+    {
+        base.Initialize();
+        Game.Window.ClientSizeChanged += WindowOnClientSizeChanged;
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+        Game.Window.ClientSizeChanged -= WindowOnClientSizeChanged;
+    }
+
+    private void WindowOnClientSizeChanged(object? sender, EventArgs e)
+    {
+        InvalidateProjection();
+    }
+
+    /*
+    /// <summary>
+    /// like a fps games camera right clicking turns mouse look on or off same for the edit mode.
+    /// </summary>
+    private void FpsUiControlsLayout()
+    {
+        MouseState state = Mouse.GetState(Game.Window);
+        KeyboardState kstate = Keyboard.GetState();
+        if (kstate.IsKeyDown(Keys.W))
+        {
+            MoveForward();
+        }
+        else if (kstate.IsKeyDown(Keys.S) == true)
+        {
+            MoveBackward();
+        }
+        // strafe. 
+        if (kstate.IsKeyDown(Keys.A) == true)
+        {
+            MoveLeft();
+        }
+        else if (kstate.IsKeyDown(Keys.D) == true)
+        {
+            MoveRight();
+        }
+
+        // rotate 
+        if (kstate.IsKeyDown(Keys.Left) == true)
+        {
+            RotateLeft();
+        }
+        else if (kstate.IsKeyDown(Keys.Right) == true)
+        {
+            RotateRight();
+        }
+        // rotate 
+        if (kstate.IsKeyDown(Keys.Up) == true)
+        {
+            RotateUp();
+        }
+        else if (kstate.IsKeyDown(Keys.Down) == true)
+        {
+            RotateDown();
+        }
+
+        if (kstate.IsKeyDown(Keys.Q) == true)
+        {
+            if (cameraTypeOption == CAM_TYPE_OPTION_FIXED)
+                MoveUpInNonLocalSystemCoordinates();
+            if (cameraTypeOption == CAM_TYPE_OPTION_FREE)
+                MoveUp();
+        }
+        else if (kstate.IsKeyDown(Keys.E) == true)
+        {
+            if (cameraTypeOption == CAM_TYPE_OPTION_FIXED)
+                MoveDownInNonLocalSystemCoordinates();
+            if (cameraTypeOption == CAM_TYPE_OPTION_FREE)
+                MoveDown();
+        }
+
+
+        if (state.LeftButton == ButtonState.Pressed)
+        {
+            if (mouseLookIsUsed == false)
+                mouseLookIsUsed = true;
+            else
+                mouseLookIsUsed = false;
+        }
+        if (mouseLookIsUsed)
+        {
+            Vector2 diff = state.Position.ToVector2() - mState.Position.ToVector2();
+            if (diff.X != 0f)
+                RotateLeftOrRight(, diff.X);
+            if (diff.Y != 0f)
+                RotateUpOrDown(, diff.Y);
+        }
+        mState = state;
+        kbState = kstate;
     }
 
     /// <summary>
-    /// Rotate yaw.
+    /// when working like programing editing and stuff.
     /// </summary>
-    /// <param name="delta_x" >Delta yaw in radians</param>
-    public void RotateYaw(float delta_x)
-        => Yaw += delta_x;
-
-    /// <summary>
-    /// Rotate pitch and yaw.
-    /// </summary>
-    /// <param name="rotation" >Rotation for pitch and yaw, vector in radians</param>
-    public void Rotate(Vector2 rotation)
+    /// <param name="gameTime"></param>
+    private void EditingUiControlsLayout(GameTime gameTime)
     {
-        RotateYaw(rotation.X);
-        RotatePitch(rotation.Y);
+        MouseState state = Mouse.GetState(Game.Window);
+        KeyboardState kstate = Keyboard.GetState();
+        if (kstate.IsKeyDown(Keys.E))
+        {
+            MoveForward(gameTime);
+        }
+        else if (kstate.IsKeyDown(Keys.Q) == true)
+        {
+            MoveBackward(gameTime);
+        }
+        if (kstate.IsKeyDown(Keys.W))
+        {
+            RotateUp(gameTime);
+        }
+        else if (kstate.IsKeyDown(Keys.S) == true)
+        {
+            RotateDown(gameTime);
+        }
+        if (kstate.IsKeyDown(Keys.A) == true)
+        {
+            RotateLeft(gameTime);
+        }
+        else if (kstate.IsKeyDown(Keys.D) == true)
+        {
+            RotateRight(gameTime);
+        }
+
+        if (kstate.IsKeyDown(Keys.Left) == true)
+        {
+            MoveLeft(gameTime);
+        }
+        else if (kstate.IsKeyDown(Keys.Right) == true)
+        {
+            MoveRight(gameTime);
+        }
+        // rotate 
+        if (kstate.IsKeyDown(Keys.Up) == true)
+        {
+            MoveUp(gameTime);
+        }
+        else if (kstate.IsKeyDown(Keys.Down) == true)
+        {
+            MoveDown(gameTime);
+        }
+
+        // roll counter clockwise
+        if (kstate.IsKeyDown(Keys.Z) == true)
+        {
+            if (cameraTypeOption == CAM_TYPE_OPTION_FREE)
+                RotateRollCounterClockwise(gameTime);
+        }
+        
+        // roll clockwise
+        else if (kstate.IsKeyDown(Keys.C) == true)
+        {
+            if (cameraTypeOption == CAM_TYPE_OPTION_FREE)
+                RotateRollClockwise(gameTime);
+        }
+
+        if (state.RightButton == ButtonState.Pressed)
+            mouseLookIsUsed = true;
+        else
+            mouseLookIsUsed = false;
+        if (mouseLookIsUsed)
+        {
+            Vector2 diff = state.Position.ToVector2() - mState.Position.ToVector2();
+            if (diff.X != 0f)
+                RotateLeftOrRight(gameTime, diff.X);
+            if (diff.Y != 0f)
+                RotateUpOrDown(gameTime, diff.Y);
+        }
+        
+        mState = state;
+        kbState = kstate;
+    }
+
+    */
+
+    public void LookAt(Vector3 location)
+    {
+        Forward = Vector3.Normalize(location - Position);
+        Right = Vector3.Normalize(Vector3.Cross(Forward, Vector3.Up));
+        Up = Vector3.Normalize(Vector3.Cross(Right, Forward));
     }
 
     /// <summary>
-    /// Rotate pitch and yaw.
+    /// This function can be used to check if gimble is about to occur in a fixed camera.
+    /// If this value returns 1.0f you are in a state of gimble lock, However even as it gets near to 1.0f you are in danger of problems.
+    /// In this case you should interpolate towards a free camera. Or begin to handle it.
+    /// Earlier then .9 in some manner you deem to appear fitting otherwise you will get a hard spin effect. Though you may want that.
     /// </summary>
-    /// <param name="yaw" >Delta yaw in radians</param>
-    /// <param name="pitch" >Delta pitch in radians</param>
-    public void Rotate(float yaw, float pitch)
+    public float GetGimbleLockDangerValue()
     {
-        RotateYaw(yaw);
-        RotatePitch(pitch);
+        var c0 = Vector3.Dot(World.Forward, World.Up);
+        if (c0 < 0f) c0 = -c0;
+        return c0;
     }
-
-    /// <summary>
-    /// Move to the left.
-    /// </summary>
-    /// <param name="velocity" >Movement velocity</param>
-    public void MoveLeft(float velocity)
-        => Position -= m_right * velocity;
-
-    /// <summary>
-    /// Move to the right.
-    /// </summary>
-    /// <param name="velocity" >Movement velocity</param>
-    public void MoveRight(float velocity)
-        => Position += m_right * velocity;
-
-    /// <summary>
-    /// Move up.
-    /// </summary>
-    /// <param name="velocity" >Movement velocity</param>
-    public void MoveUp(float velocity)
-        => Position += m_up * velocity;
-
-    /// <summary>
-    /// Move down
-    /// </summary>
-    /// <param name="velocity" >Movement velocity</param>
-    public void MoveDown(float velocity)
-        => Position -= m_up * velocity;
-
-    /// <summary>
-    /// Move forward.
-    /// </summary>
-    /// <param name="velocity" >Movement velocity</param>
-    public void MoveForward(float velocity)
-        => Position += m_forward * velocity;
-
-    /// <summary>
-    /// Move backward.
-    /// </summary>
-    /// <param name="velocity" >Movement velocity</param>
-    public void MoveBackward(float velocity)
-        => Position -= m_forward * velocity;
-
-    public void Move(Vector3 moveVector)
-    {
-        Position += m_forward * moveVector.X;
-        Position += m_right * moveVector.Y;
-        Position += m_up * moveVector.Z;
-    }
-
-    public void MoveAbsolute(Vector2 moveVector)
-    {
-        Position += new Vector3(moveVector, 0);
-    }
-
-    public void MoveAbsolute(Vector3 moveVector)
-    {
-        Position += moveVector;
-    }
-
-    public void MoveTo(Vector2 position)
-    {
-        MoveAbsolute(position - new Vector2(Position.X, Position.Y));
-    }
-
+    
+    #region Local Translations and Rotations.
+    
     public void MoveTo(Vector3 position)
     {
-        MoveAbsolute(position - Position);
+        TargetPosition = position;
+    }
+    
+    public void Move(Vector3 movementVector)
+    {
+        TargetPosition += movementVector;
+    }
+
+    /*
+    public void MoveForward()
+    {
+        TargetPosition += Forward;
+    }
+    
+    public void MoveBackward()
+    {
+        TargetPosition += World.Backward;
+    }
+    
+    public void MoveLeft()
+    {
+        TargetPosition += World.Left;
+    }
+    
+    public void MoveRight()
+    {
+        TargetPosition += World.Right;
+    }
+    
+    public void MoveUp()
+    {
+        TargetPosition += World.Up;
+    }
+    
+    public void MoveDown()
+    {
+        TargetPosition += World.Down;
+    }
+
+    public void RotateUp()
+    {
+        var radians = RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(World.Right, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    }
+    
+    public void RotateDown()
+    {
+        var radians = -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(World.Right, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    }
+    
+    public void RotateLeft()
+    {
+        var radians = RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(World.Up, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    }
+    
+    public void RotateRight()
+    {
+        var radians = -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(World.Up, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    }
+    
+    public void RotateRollClockwise()
+    {
+        var radians = RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var pos = Position;
+        World *= Matrix.CreateFromAxisAngle(Forward, MathHelper.ToRadians(radians));
+        Position = pos;
+        InvalidateWorldAndView();
+    }
+    
+    public void RotateRollCounterClockwise()
+    {
+        var radians = -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var pos = Position;
+        World *= Matrix.CreateFromAxisAngle(Forward, MathHelper.ToRadians(radians));
+        Position = pos;
+        InvalidateWorldAndView();
+    }
+
+    // just for example this is the same as the above rotate left or right.
+    public void RotateLeftOrRight(GameTime gameTime, float amount)
+    {
+        var radians = amount * -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(World.Up, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    }
+    public void RotateUpOrDown(GameTime gameTime, float amount)
+    {
+        var radians = amount * -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(World.Right, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    } 
+
+    #endregion
+
+    #region Non Local System Translations and Rotations.
+
+    public void MoveForwardInNonLocalSystemCoordinates()
+    {
+        TargetPosition += (Vector3.Forward * MovementUnitsPerSecond) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+    }
+    
+    public void MoveBackwardsInNonLocalSystemCoordinates()
+    {
+        TargetPosition += (Vector3.Backward * MovementUnitsPerSecond) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+    }
+    
+    public void MoveUpInNonLocalSystemCoordinates()
+    {
+        TargetPosition += (Vector3.Up * MovementUnitsPerSecond) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+    }
+    
+    public void MoveDownInNonLocalSystemCoordinates()
+    {
+        TargetPosition += (Vector3.Down * MovementUnitsPerSecond) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+    }
+    
+    public void MoveLeftInNonLocalSystemCoordinates()
+    {
+        TargetPosition += (Vector3.Left * MovementUnitsPerSecond) * (float)gameTime.ElapsedGameTime.TotalSeconds;
+    }
+    
+    public void MoveRightInNonLocalSystemCoordinates()
+    {
+        TargetPosition += (Vector3.Right * MovementUnitsPerSecond) * (float)gameTime.ElapsedGameTime.TotalSeconds;
     }
 
     /// <summary>
-    /// Tick camera, update matrices.
+    /// These aren't typically useful and you would just use create world for a camera snap to a new view. I leave them for completeness.
     /// </summary>
-    /// <param name="device">Current graphics device instance</param>
-    public void Tick(GraphicsDevice device)
+    public void NonLocalRotateLeftOrRight(GameTime gameTime, float amount)
     {
-        CameraViewport = device.Viewport;
-        CameraArea = new(Position.X, Position.Y, CameraViewport.Width, CameraViewport.Height); 
-
-        // Update Forward Vector
-        m_forward.X = MathF.Cos(Yaw) * MathF.Cos(Pitch);
-        m_forward.Y = MathF.Sin(Pitch);
-        m_forward.Z = MathF.Sin(Yaw) * MathF.Cos(Pitch);
-        m_forward.Normalize();
-
-        // Update Right Vector
-        m_right = Vector3.Cross(m_forward, new Vector3(0.0f, 1.0f, 0.0f));
-        m_right.Normalize();
-
-        // Update North
-        m_up = Vector3.Cross(m_right, m_forward);
-        m_up.Normalize();
-
-        // Update matrices
-        m_projection = Matrix.CreatePerspectiveFieldOfView(FieldOfView, CameraViewport.AspectRatio, Near, Far);
-        m_view = Matrix.CreateLookAt(Position, default, m_up);
-        m_world = Matrix.CreateTranslation(-Position);// * Matrix.CreateScale();
-
-        Matrix.Multiply(ref m_world, ref m_view, out m_transform);
-        Matrix.Multiply(ref m_transform, ref m_projection, out m_transform);
+        var radians = amount * -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(Vector3.Up, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
+    }
+    /// <summary>
+    /// These aren't typically useful and you would just use create world for a camera snap to a new view.  I leave them for completeness.
+    /// </summary>
+    public void NonLocalRotateUpOrDown(GameTime gameTime, float amount)
+    {
+        var radians = amount * -RotationRadiansPerSecond * (float)gameTime.ElapsedGameTime.TotalSeconds;
+        Matrix matrix = Matrix.CreateFromAxisAngle(Vector3.Right, MathHelper.ToRadians(radians));
+        Forward = Vector3.TransformNormal(Forward, matrix);
+        InvalidateWorldAndView();
     }
 
-    public Vector2 GetAspect()
-        => new(
-            2.0f * MathF.Atan(MathF.Tan(FieldOfView * 0.5f) * CameraViewport.AspectRatio),
-            FieldOfView
-        );
-
-    public Vector2 GetHalfAspect()
-        => GetAspect() * 0.5f;
+    */
+    #endregion
 
     public void RenderImGuiDebug()
     {
@@ -193,34 +543,28 @@ public class PerspectiveProjectionCamera : IDebugExplorable
         {
             Span<char> bf = stackalloc char[38];
         
-            ImGui.LabelText("North Vector", Up.ToStringSpan(bf, "0.0000"));
-            ImGui.LabelText("Right Vector", Right.ToStringSpan(bf, "0.0000"));
+            ImGui.LabelText("Up Vector", Up.ToStringSpan(bf, "0.0000"));
+            ImGui.LabelText("Right Vector", World.Right.ToStringSpan(bf, "0.0000"));
             ImGui.LabelText("Forward Vector", Forward.ToStringSpan(bf, "0.0000"));
-
+            ImGui.LabelText("Position Vector", Position.ToStringSpan(bf, "0.0000"));
         }
         
-        var __Yaw = Yaw;
-        if (ImGui.InputFloat("Yaw", ref __Yaw))
-            Yaw = __Yaw;
+        PrintVectors();
         
-        var __Pitch = Pitch;
-        if (ImGui.InputFloat("Pitch", ref __Pitch))
-            Pitch = __Pitch;
+        var __Far = FarPlane;
+        if (ImGui.InputFloat("Far Plane", ref __Far) && __Far > 0.0 && __Far > NearPlane)
+            FarPlane = __Far;
         
-        var __Far = Far;
-        if (ImGui.InputFloat("Far Plane", ref __Far) && __Far > 0.0 && __Far > Near)
-            Far = __Far;
-        
-        var __Near = Near;
-        if (ImGui.InputFloat("Near Plane", ref __Near) && __Near > 0.0 && __Near < Far)
-            Near = __Near;
+        var __Near = NearPlane;
+        if (ImGui.InputFloat("Near Plane", ref __Near) && __Near > 0.0 && __Near < FarPlane)
+            NearPlane = __Near;
 
         var __Fov = FieldOfView;
         if (ImGui.InputFloat("Field of View", ref __Fov) && __Fov > 0.0 && __Fov < 3.1415929794311523)
             FieldOfView = __Fov;
 
-        var __pos = Position.ToNumerics();
-        if (ImGui.InputFloat3("Position", ref __pos))
-            Position = __pos;
+        var __pos = TargetPosition.ToNumerics();
+        if (ImGui.InputFloat3("Target Position", ref __pos))
+            TargetPosition = __pos;
     }
 }

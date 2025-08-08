@@ -156,7 +156,6 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
         
         if (comp is Scene sc)
         {
-            
             sb.Append("Scene '");
             sb.Append(sc.GetType().Name);
             sb.Append("' (");
@@ -165,8 +164,23 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
             
             if (ImGui.TreeNode(sc.GetHashCode().ToStringSpan(smallbuffer), sb.AsSpan()))
             {
-                ImGui.LabelText("Updating", sc.Enabled ? "Enabled" : "Disabled");
-                ImGui.LabelText("Drawing", sc.Visible ? "Visible" : "Invisible");
+                var en = sc.Enabled;
+                if (ImGui.Checkbox("Enabled", ref en))
+                    sc.Enabled = en;
+                ImGui.SameLine();
+                if (sc.Enabled)
+                    ImGui.TextColored(Color.LightBlue.ToVector4().ToNumerics(), "\tUpdating");
+                else
+                    ImGui.TextColored(Color.Red.ToVector4().ToNumerics(), "\tNot Updating");
+                
+                var vi = sc.Visible;
+                if (ImGui.Checkbox("Visible", ref vi))
+                    sc.Visible = vi;
+                ImGui.SameLine();
+                if (sc.Visible)
+                    ImGui.TextColored(Color.LightBlue.ToVector4().ToNumerics(), "\tDrawing");
+                else
+                    ImGui.TextColored(Color.Red.ToVector4().ToNumerics(), "\tNot Drawing");
 
                 if (ImGui.TreeNode("More info"))
                 {
@@ -205,11 +219,43 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
 
         if (ImGui.TreeNode(sb.AsSpan()))
         {
-            if (comp is IDrawable dr)
-                ImGui.LabelText("Drawable", dr.Visible ? "Visible" : "Invisible");
-                    
             if (comp is IUpdateable up)
-                ImGui.LabelText("Updateable", up.Enabled ? "Enabled" : "Disabled");
+            {
+                if (up is GameComponent gc)
+                {
+                    var en = gc.Enabled;
+                    if (ImGui.Checkbox("Enabled", ref en))
+                        gc.Enabled = en;
+                    ImGui.SameLine();
+                    if (gc.Enabled)
+                        ImGui.TextColored(Color.LightBlue.ToVector4().ToNumerics(), "\tUpdating");
+                    else
+                        ImGui.TextColored(Color.Red.ToVector4().ToNumerics(), "\tNot Updating");
+                }
+                else
+                {
+                    ImGui.LabelText("Updateable (Editing not supported)", up.Enabled ? "Enabled" : "Disabled");
+                }
+            }
+                
+            if (comp is IDrawable dr)
+            {
+                if (dr is DrawableGameComponent drgc)
+                {
+                    var vi = drgc.Visible;
+                    if (ImGui.Checkbox("Visible", ref vi))
+                        drgc.Visible = vi;
+                    ImGui.SameLine();
+                    if (drgc.Visible)
+                        ImGui.TextColored(Color.LightBlue.ToVector4().ToNumerics(), "\tDrawing");
+                    else
+                        ImGui.TextColored(Color.Red.ToVector4().ToNumerics(), "\tNot Drawing");   
+                }
+                else
+                {
+                    ImGui.LabelText("Drawable (Editing not supported)", dr.Visible ? "Visible" : "Invisible");
+                }
+            }
 
             if (comp is IDebugExplorable dcomp && ImGui.TreeNode("More Info"))
             {
