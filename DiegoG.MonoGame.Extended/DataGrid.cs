@@ -16,6 +16,9 @@ public sealed class DataGrid<T>(BoundedSquareGrid bounds)
 
     public BoundedSquareGrid Bounds { get; } = bounds;
 
+    public int XLength => Bounds.XCells;
+    public int YLength => Bounds.YCells;
+
     public CellData this[Point point] => this[point.X, point.Y];
     
     public CellData this[int x, int y]

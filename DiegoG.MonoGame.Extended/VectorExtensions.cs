@@ -40,4 +40,54 @@ public static class VectorExtensions
             (int)vec.Z,
             (int)vec.W
         );
+
+    public static Point TopRight(this Rectangle rect, int mult)
+        => new(rect.X * mult + rect.Width * mult, rect.Y * mult);
+
+    public static Point BottomLeft(this Rectangle rect, int mult)
+        => new(rect.X * mult, rect.Y * mult + rect.Height * mult);
+
+    public static Point TopLeft(this Rectangle rect, int mult)
+        => new(rect.X * mult, rect.Y * mult);
+
+    public static Point BottomRight(this Rectangle rect, int mult)
+        => new(rect.X * mult + rect.Width * mult, rect.Y * mult + rect.Height * mult);
+
+    public static Point TopRight(this Rectangle rect)
+        => new(rect.X + rect.Width, rect.Y);
+
+    public static Point BottomLeft(this Rectangle rect)
+        => new(rect.X, rect.Y + rect.Height);
+
+    public static Point TopLeft(this Rectangle rect)
+        => rect.Location;
+
+    public static Point BottomRight(this Rectangle rect)
+        => new(rect.X + rect.Width, rect.Y + rect.Height);
+    
+    public static Point FindCentroid(this List<Point> points) 
+    {
+        int x = 0;
+        int y = 0;
+
+        foreach (var p in points)
+        {
+            x += p.X;
+            y += p.Y;
+        }
+        
+        return new(x / points.Count, y / points.Count);
+    }
+    
+    public static void SortVertices(this List<Point> points) 
+    {
+        // get centroid
+        var center = points.FindCentroid();
+        points.Sort((a, b) =>
+        {
+            double a1 = (double.RadiansToDegrees(double.Atan2(a.X - center.X, a.Y - center.Y)) + 360) % 360;
+            double a2 = (double.RadiansToDegrees(double.Atan2(b.X - center.X, b.Y - center.Y)) + 360) % 360;
+            return (int) (a1 - a2); 
+        });
+    }
 }

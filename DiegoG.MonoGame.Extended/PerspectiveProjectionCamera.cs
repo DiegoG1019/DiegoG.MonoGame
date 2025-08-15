@@ -553,18 +553,42 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
         
         var __Far = FarPlane;
         if (ImGui.InputFloat("Far Plane", ref __Far) && __Far > 0.0 && __Far > NearPlane)
+        {
             FarPlane = __Far;
+            InvalidateProjection();
+            InvalidateWorldAndView();
+        }
         
         var __Near = NearPlane;
         if (ImGui.InputFloat("Near Plane", ref __Near) && __Near > 0.0 && __Near < FarPlane)
+        {
             NearPlane = __Near;
+            InvalidateProjection();
+            InvalidateWorldAndView();
+        }
+
+        var __fovdeg = FieldOfViewDegrees;
+        if (ImGui.InputFloat("Field of View (Degrees)", ref __fovdeg) && __fovdeg > 0.0 && __fovdeg < 360)
+        {
+            FieldOfViewDegrees = __fovdeg;
+            InvalidateProjection();
+            InvalidateWorldAndView();
+        }
 
         var __Fov = FieldOfView;
-        if (ImGui.InputFloat("Field of View", ref __Fov) && __Fov > 0.0 && __Fov < 3.1415929794311523)
+        if (ImGui.InputFloat("Field of View (Radians)", ref __Fov) && __Fov > 0.0 && __Fov < 3.1415929794311523)
+        {
             FieldOfView = __Fov;
+            InvalidateProjection();
+            InvalidateWorldAndView();
+        }
 
         var __pos = TargetPosition.ToNumerics();
         if (ImGui.InputFloat3("Target Position", ref __pos))
+        {
             TargetPosition = __pos;
+            InvalidateProjection();
+            InvalidateWorldAndView();
+        }
     }
 }
