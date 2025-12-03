@@ -82,12 +82,12 @@ public struct DirectionMovementState(int x, int y)
             || (CardinalDirection is CardinalDirection.North && Y >= rectangle.Top)
             || (CardinalDirection is CardinalDirection.South && Y < rectangle.Bottom))
         {
-            DebugCheck(rectangle);
+            CheckPosition(rectangle);
             return true;
         }
 
         Position = prev;
-        DebugCheck(rectangle);
+        CheckPosition(rectangle);
         return false;
     }
     
@@ -95,7 +95,9 @@ public struct DirectionMovementState(int x, int y)
     {
         var prev = Position;
         Move();
-        
+        if (CheckPosition(rectangle))
+            return;
+
         if (boundsCheck is BoundsCheckReaction.Stop)
         {
             if (CardinalDirection is CardinalDirection.East && X >= rectangle.Left
@@ -168,7 +170,9 @@ public struct DirectionMovementState(int x, int y)
             }
         }
 
-        DebugCheck(rectangle);
+#if DEBUG
+        CheckPosition(rectangle);
+#endif
         //TODO: This looks ugly as hell. Revisit, please
     }
 
@@ -177,11 +181,15 @@ public struct DirectionMovementState(int x, int y)
         CardinalDirection = (CardinalDirection)((random ?? Random.Shared).Next() % 4);
     }
     
-    private void DebugCheck(in Rectangle rectangle)
+    private bool CheckPosition(in Rectangle rectangle)
     {
-#if DEBUG
         if (Position.X < 0 || Position.Y < 0 || Position.X >= rectangle.Width || Position.Y >= rectangle.Height)
+        {
+#if DEBUG
             Debugger.Break();
 #endif
+            return false;
+        }
+        return true;
     }
 }

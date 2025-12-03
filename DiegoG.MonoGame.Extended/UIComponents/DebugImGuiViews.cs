@@ -22,14 +22,14 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
         Debug.Assert(GameServiceContainerDict.FieldType == typeof(Dictionary<Type, object>));
     }
 
-    private delegate void DebugFormatter<T>(T value, ref ValueStringBuilder sb);
+    private delegate void DebugFormatter<in T>(T value, ref ValueStringBuilder sb);
 
     private static readonly FieldInfo GameServiceContainerDict;
     private static readonly FieldInfo ContentManagerLoadedAssets; 
     
     public bool DebugViews { get; set; } = true;
     private bool ShowMetricsWindow;
-    private HashSet<IGameComponent> exploredComponents = new();
+    private readonly HashSet<IGameComponent> exploredComponents = [];
 
     public override void Draw(GameTime gameTime)
     {

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
 	<Nullable>enable</Nullable>
 	<PublishReadyToRun>false</PublishReadyToRun>
@@ -9,14 +9,14 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-	  <PackageReference Include="MessagePack" Version="2.5.192" />
-	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.2.1105">
+	  <PackageReference Include="GLV.Shared.Common" Version="1.3.2511.2518" />
+	  <PackageReference Include="MessagePack" Version="3.1.4" />
+	  <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4.1">
 		  <PrivateAssets>All</PrivateAssets>
 	  </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\GLV.Shared\GLV.Shared.Common\GLV.Shared.Common.csproj" />
     <ProjectReference Include="..\..\MonoGame.Extended\source\MonoGame.Extended\MonoGame.Extended.csproj" />
     <ProjectReference Include="..\..\MonoGame.ImGuiNet\MonoGame.ImGuiNet\Monogame.ImGuiNet.csproj" />
   </ItemGroup>
