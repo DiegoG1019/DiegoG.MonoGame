@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using GLV.Shared.Common;
 using GLV.Shared.Common.Text;
 using ImGuiNET;
@@ -7,6 +8,17 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 
 namespace DiegoG.MonoGame.Extended.UIComponents;
+
+public static class DebugImGuiExtensions
+{
+    public static void RenderImGuiComponent(this IGameComponent component)
+    {
+        Span<char> buffer = stackalloc char[800];
+        Span<char> smallbuffer = stackalloc char[16];
+        var sb = new ValueStringBuilder(buffer);
+        DebugImGuiViews.RenderImGuiComponent(component, null, buffer, smallbuffer, ref sb);
+    }
+}
 
 public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
 {
@@ -129,20 +141,34 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
         Span<char> smallbuffer = stackalloc char[16];
         var sb = new ValueStringBuilder(buffer);
 
-        foreach (var comp in Game.Components)
-            RenderImGuiComponent(comp, buffer, smallbuffer, ref sb);
+        if (Game is IDebugExplorable de)
+        {
+            de.RenderImGuiDebug();
+            
+            if (!ImGui.TreeNode("Components")) return;
+            
+            foreach (var comp in Game.Components)
+                RenderImGuiComponent(comp, exploredComponents, buffer, smallbuffer, ref sb);
+            
+            ImGui.TreePop();
+        }
+        else
+        {
+            foreach (var comp in Game.Components)
+                RenderImGuiComponent(comp, exploredComponents, buffer, smallbuffer, ref sb);
+        }
     }
 
-    internal void RenderImGuiComponent(IGameComponent comp, Span<char> buffer, Span<char> smallbuffer, ref ValueStringBuilder sb)
+    internal static void RenderImGuiComponent(IGameComponent comp, HashSet<IGameComponent>? exploredComponents, Span<char> buffer, Span<char> smallbuffer, ref ValueStringBuilder sb)
     {
         if (comp.GetType().IsAssignableTo(typeof(DebugImGuiViews)))
         {
             ImGui.TextColored(Color.Red.ToVector4().ToNumerics(), "Debug View Component");
             return;
         }
-
+        
         sb.Clear();
-        if (exploredComponents.Add(comp) is false)
+        if ((exploredComponents?.Add(comp) ?? true) is false)
         {
             sb.Append("Component '");
             sb.Append(comp.GetType().Name);
@@ -157,7 +183,7 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
         if (comp is Scene sc)
         {
             sb.Append("Scene '");
-            sb.Append(sc.GetType().Name);
+            sb.Append(sc.DebugName ?? sc.GetType().Name);
             sb.Append("' (");
             sb.Append(sc.GetHashCode().ToStringSpan(smallbuffer));
             sb.Append(')');
@@ -181,11 +207,10 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
                     ImGui.TextColored(Color.LightBlue.ToVector4().ToNumerics(), "\tDrawing");
                 else
                     ImGui.TextColored(Color.Red.ToVector4().ToNumerics(), "\tNot Drawing");
-
-                if (ImGui.TreeNode("More info"))
+  
+                if (sc is IDebugExplorable dsc && ImGui.TreeNode("More info"))
                 {
-                    if (sc is IDebugExplorable dsc) 
-                        dsc.RenderImGuiDebug();
+                    dsc.RenderImGuiDebug();
                     ImGui.TreePop();
                 }
                 
@@ -198,7 +223,7 @@ public class DebugImGuiViews(Game game) : DrawableGameComponent(game)
                     if (ImGui.TreeNode(sc.SceneComponents.GetHashCode().ToStringSpan(smallbuffer), sb.AsSpan()))
                     {
                         foreach (var c in sc.SceneComponents)
-                            RenderImGuiComponent(c, buffer, smallbuffer, ref sb);
+                            RenderImGuiComponent(c, exploredComponents, buffer, smallbuffer, ref sb);
                         ImGui.TreePop();
                     }
                 }

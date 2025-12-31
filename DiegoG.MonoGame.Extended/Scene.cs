@@ -13,6 +13,7 @@ public class Scene : DrawableGameComponent
 
     private bool isloaded;
     
+    // TODO: Add a ServiceContainer in Scene
     public Scene(Game game) : base(game)
     {
         SceneComponents.ComponentAdded += SceneComponentsOnComponentAdded;
@@ -95,6 +96,8 @@ public class Scene : DrawableGameComponent
         
         base.Dispose(disposing);
     }
+    
+    public string? DebugName { get; set; }
 
     #region Sorting and event handling
     

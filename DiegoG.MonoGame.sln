@@ -11,9 +11,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MonoGame.Extended", "MonoGa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonoGame.Extended", "..\MonoGame.Extended\source\MonoGame.Extended\MonoGame.Extended.csproj", "{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monogame.ImGuiNet", "..\MonoGame.ImGuiNet\MonoGame.ImGuiNet\Monogame.ImGuiNet.csproj", "{E2A6A8C7-F538-2DD9-8A4F-33C425560A7B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame.ImGuiNet", "..\MonoGame.ImGuiNet\MonoGame.ImGuiNet\MonoGame.ImGuiNet.csproj", "{E2A6A8C7-F538-2DD9-8A4F-33C425560A7B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiegoG.MonoGame.Network", "DiegoG.MonoGame.Network\DiegoG.MonoGame.Network.csproj", "{DE0FBA23-D351-4D0B-ADF3-D33DAF977D05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiegoG.UI.MonoGame", "DiegoG.UI.MonoGame\DiegoG.UI.MonoGame.csproj", "{8E0338BF-7E4F-4796-A1E6-A00F8F5E000A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{F50A67FC-5215-4BFB-8D15-195FACA9B01E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiegoG.UI", "..\DiegoG.UI\DiegoG.UI\DiegoG.UI.csproj", "{DE0322F3-ABC7-4A0F-8FA8-5E82302E0705}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +47,14 @@ Global
 		{DE0FBA23-D351-4D0B-ADF3-D33DAF977D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE0FBA23-D351-4D0B-ADF3-D33DAF977D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE0FBA23-D351-4D0B-ADF3-D33DAF977D05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E0338BF-7E4F-4796-A1E6-A00F8F5E000A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E0338BF-7E4F-4796-A1E6-A00F8F5E000A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E0338BF-7E4F-4796-A1E6-A00F8F5E000A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E0338BF-7E4F-4796-A1E6-A00F8F5E000A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE0322F3-ABC7-4A0F-8FA8-5E82302E0705}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE0322F3-ABC7-4A0F-8FA8-5E82302E0705}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE0322F3-ABC7-4A0F-8FA8-5E82302E0705}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE0322F3-ABC7-4A0F-8FA8-5E82302E0705}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -48,6 +62,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{3C5CAE75-4572-4F56-99B5-F4BAE9DC9C5D} = {363DCDED-ADE7-45CB-B71D-E5F0BD033BD4}
 		{E2A6A8C7-F538-2DD9-8A4F-33C425560A7B} = {363DCDED-ADE7-45CB-B71D-E5F0BD033BD4}
+		{DE0322F3-ABC7-4A0F-8FA8-5E82302E0705} = {F50A67FC-5215-4BFB-8D15-195FACA9B01E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AB0DDE58-6C16-4F24-A85E-91252E02E456}

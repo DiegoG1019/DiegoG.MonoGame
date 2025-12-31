@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GLV.Shared.Networking" Version="1.3.2511.2518" />
+    <ProjectReference Include="..\..\GLV.Shared\GLV.Shared.Networking\GLV.Shared.Networking.csproj" />
   </ItemGroup>
 
 </Project>

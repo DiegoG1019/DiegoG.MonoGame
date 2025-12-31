@@ -1,4 +1,5 @@
 using System.Text;
+using GLV.Shared.Common.Collections;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
@@ -7,7 +8,6 @@ namespace DiegoG.MonoGame.Extended;
 
 public class ViewableFPSCounter(Game game, string font, SpriteBatch batch) : FramesPerSecondCounterComponent(game)
 {
-    private StringBuilder? sb;
     private SpriteFont? spriteFont;
 
     public bool DisplayFPS { get; set; } = true;
@@ -26,13 +26,15 @@ public class ViewableFPSCounter(Game game, string font, SpriteBatch batch) : Fra
         base.Draw(gameTime);
 
         if (!DisplayFPS) return;
-        
-        sb ??= new(10);
-        sb.Clear();
-        sb.Append(FramesPerSecond);
-        for (int i = 0; i < 10 - sb.Length; i++)
-            sb.Insert(0, ' ');
-        
-        batch.DrawString(spriteFont, sb, DisplayPosition, Color);
+
+        using (StringBuilderPool.Shared.ObtainSafe(out var sb))
+        {
+            sb.Clear();
+            sb.Append(FramesPerSecond);
+            for (int i = 0; i < 10 - sb.Length; i++)
+                sb.Insert(0, ' ');
+            
+            batch.DrawString(spriteFont, sb, DisplayPosition, Color);
+        }
     }
 }

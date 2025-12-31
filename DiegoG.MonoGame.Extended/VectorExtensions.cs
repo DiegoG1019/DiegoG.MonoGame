@@ -5,6 +5,33 @@ namespace DiegoG.MonoGame.Extended;
 
 public static class VectorExtensions
 {
+    extension(Vector2 vec)
+    {
+        public Vector2 RotateAroundCopy(Vector2 origin, float radians)
+        {
+            var v = vec;
+            v -= origin;
+            float cos = float.Cos(radians);
+            float sin = float.Sin(radians);
+            float x = v.X;
+            v.X = v.X * cos - v.Y * sin;
+            v.Y = x * sin + v.Y * cos;
+            v += origin;
+            return v;
+        }
+
+        public Vector2 RotateCopy(float radians)
+        {
+            var v = vec;
+            float cos = float.Cos(radians);
+            float sin = float.Sin(radians);
+            float x = v.X;
+            v.X = v.X * cos - v.Y * sin;
+            v.Y = x * sin + v.Y * cos;
+            return v;
+        }
+    }
+
     // these functions are so tiny it's almost unnecessary to use this attribute; but I wanna make sure nonetheless
     [MethodImpl(MethodImplOptions.AggressiveInlining)] 
     public static ulong Pack(int a, int b)
@@ -41,53 +68,59 @@ public static class VectorExtensions
             (int)vec.W
         );
 
-    public static Point TopRight(this Rectangle rect, int mult)
-        => new(rect.X * mult + rect.Width * mult, rect.Y * mult);
-
-    public static Point BottomLeft(this Rectangle rect, int mult)
-        => new(rect.X * mult, rect.Y * mult + rect.Height * mult);
-
-    public static Point TopLeft(this Rectangle rect, int mult)
-        => new(rect.X * mult, rect.Y * mult);
-
-    public static Point BottomRight(this Rectangle rect, int mult)
-        => new(rect.X * mult + rect.Width * mult, rect.Y * mult + rect.Height * mult);
-
-    public static Point TopRight(this Rectangle rect)
-        => new(rect.X + rect.Width, rect.Y);
-
-    public static Point BottomLeft(this Rectangle rect)
-        => new(rect.X, rect.Y + rect.Height);
-
-    public static Point TopLeft(this Rectangle rect)
-        => rect.Location;
-
-    public static Point BottomRight(this Rectangle rect)
-        => new(rect.X + rect.Width, rect.Y + rect.Height);
-    
-    public static Point FindCentroid(this List<Point> points) 
+    extension(Rectangle rect)
     {
-        int x = 0;
-        int y = 0;
+        public Point GetTopRight(int mult)
+            => new(rect.X * mult + rect.Width * mult, rect.Y * mult);
 
-        foreach (var p in points)
-        {
-            x += p.X;
-            y += p.Y;
-        }
-        
-        return new(x / points.Count, y / points.Count);
+        public Point GetBottomLeft(int mult)
+            => new(rect.X * mult, rect.Y * mult + rect.Height * mult);
+
+        public Point GetTopLeft(int mult)
+            => new(rect.X * mult, rect.Y * mult);
+
+        public Point GetBottomRight(int mult)
+            => new(rect.X * mult + rect.Width * mult, rect.Y * mult + rect.Height * mult);
+
+        public Point TopRight
+            => new(rect.X + rect.Width, rect.Y);
+
+        public Point BottomLeft
+            => new(rect.X, rect.Y + rect.Height);
+
+        public Point TopLeft
+            => rect.Location;
+
+        public Point BottomRight
+            => new(rect.X + rect.Width, rect.Y + rect.Height);
     }
-    
-    public static void SortVertices(this List<Point> points) 
+
+    extension(List<Point> points)
     {
-        // get centroid
-        var center = points.FindCentroid();
-        points.Sort((a, b) =>
+        public Point FindCentroid() 
         {
-            double a1 = (double.RadiansToDegrees(double.Atan2(a.X - center.X, a.Y - center.Y)) + 360) % 360;
-            double a2 = (double.RadiansToDegrees(double.Atan2(b.X - center.X, b.Y - center.Y)) + 360) % 360;
-            return (int) (a1 - a2); 
-        });
+            int x = 0;
+            int y = 0;
+
+            foreach (var p in points)
+            {
+                x += p.X;
+                y += p.Y;
+            }
+        
+            return new(x / points.Count, y / points.Count);
+        }
+
+        public void SortVertices() 
+        {
+            // get centroid
+            var center = points.FindCentroid();
+            points.Sort((a, b) =>
+            {
+                double a1 = (double.RadiansToDegrees(double.Atan2(a.X - center.X, a.Y - center.Y)) + 360) % 360;
+                double a2 = (double.RadiansToDegrees(double.Atan2(b.X - center.X, b.Y - center.Y)) + 360) % 360;
+                return (int) (a1 - a2); 
+            });
+        }
     }
 }

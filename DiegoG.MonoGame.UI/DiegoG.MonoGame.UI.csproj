@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Update="MonoGame.Framework.DesktopGL" Version="3.8.4.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\..\MonoGame.Extended\source\MonoGame.Extended\MonoGame.Extended.csproj" />
+      <ProjectReference Include="..\DiegoG.MonoGame.Extended\DiegoG.MonoGame.Extended.csproj" />
+      <ProjectReference Include="..\..\GLV.Shared\GLV.Shared.Common\GLV.Shared.Common.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Include="MonoGame.Framework">
+        <HintPath>..\..\..\..\..\..\..\..\home\DiegoG\.nuget\packages\monogame.framework.desktopgl\3.8.4.1\lib\net8.0\MonoGame.Framework.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+</Project>

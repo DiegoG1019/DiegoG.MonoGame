@@ -185,9 +185,6 @@ public struct DirectionMovementState(int x, int y)
     {
         if (Position.X < 0 || Position.Y < 0 || Position.X >= rectangle.Width || Position.Y >= rectangle.Height)
         {
-#if DEBUG
-            Debugger.Break();
-#endif
             return false;
         }
         return true;

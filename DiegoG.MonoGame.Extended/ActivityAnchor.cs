@@ -1,5 +1,5 @@
-﻿using Microsoft.Xna.Framework;
-using MonoGame.Extended;
+﻿using MonoGame.Extended;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace DiegoG.MonoGame.Extended;
 
