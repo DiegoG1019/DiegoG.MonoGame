@@ -1,11 +1,12 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 
 namespace DiegoG.MonoGame.DependencyInjection;
 
-public class GameServiceProvider : IServiceProvider, IKeyedServiceProvider, IDisposable, IAsyncDisposable
+public class GameDependencyInjectionServiceProvider : IServiceProvider, IKeyedServiceProvider, IDisposable, IAsyncDisposable
 {
-    public GameServiceProvider(Game game, Action<ServiceCollection>? configureServices)
+    public GameDependencyInjectionServiceProvider(Game game, Action<ServiceCollection>? configureServices)
     {
         var collection = new ServiceCollection();
         collection.AddSingleton(game);

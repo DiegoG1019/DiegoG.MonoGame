@@ -1,15 +1,72 @@
+using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Numerics;
 using Microsoft.Xna.Framework;
 using MonoGame.Extended;
 
 namespace DiegoG.MonoGame.Extended;
 
+public static class EnumData
+{
+    public static readonly ImmutableArray<CardinalDirection> CardinalDirectionValues =
+        Enum.GetValues<CardinalDirection>().ToImmutableArray();
+
+    public static T GetAngleRadians<T>(this CardinalDirection direction) where T : IFloatingPointIeee754<T>
+        => direction switch
+        {
+            CardinalDirection.North => T.Zero,
+            CardinalDirection.NorthWest => T.DegreesToRadians(T.CreateSaturating(45)),
+            CardinalDirection.West => T.DegreesToRadians(T.CreateSaturating(90)),
+            CardinalDirection.SouthWest => T.DegreesToRadians(T.CreateSaturating(135)),
+            CardinalDirection.South => T.DegreesToRadians(T.CreateSaturating(180)),
+            CardinalDirection.SouthEast => T.DegreesToRadians(T.CreateSaturating(225)),
+            CardinalDirection.East => T.DegreesToRadians(T.CreateSaturating(270)),
+            CardinalDirection.NorthEast => T.DegreesToRadians(T.CreateSaturating(315)),
+            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
+        };
+
+    public static CardinalDirection GetFacingDirection<T>(this T angleRadians) where T : IFloatingPointIeee754<T>
+        => (angleRadians % (T.Pi * T.CreateSaturating(2))) switch
+        {
+            // We need to check the angle to get the cardinal direction
+            // Imagine 8 cones, one for each direction, all of equal size
+            // From the center of each cone, the border is at the 22.5deg step. From -22.5deg, the left border of north,
+            // the beginning of the north-western cone is 45deg to the right
+            
+            // 337.5 deg
+            >= 5.8904867 => CardinalDirection.North,
+            // 292.5 deg
+            >= 5.105088 => CardinalDirection.NorthEast,
+            // 247.5 deg
+            >= 4.3196898 => CardinalDirection.East,
+            // 202.5 deg
+            >= 3.534292 => CardinalDirection.SouthEast,
+            // 157.5 deg
+            >= 2.7488935 => CardinalDirection.South,
+            // 112.5 deg
+            >= 1.9634954 => CardinalDirection.SouthWest,
+            // 67.5 deg
+            >= 1.1780972 => CardinalDirection.West,
+            // 22.5 deg
+            >= 0.3926991 => CardinalDirection.NorthWest,
+            // From 337.5 deg to just before 22.5 deg, remember it's %'d with a full rotation
+            _ => CardinalDirection.North
+        };
+}
+
+/// <summary>
+/// Provides the cardinal directions; ordered clockwise from North to NorthEast
+/// </summary>
 public enum CardinalDirection
 {
     North,
+    NorthWest,
     West,
+    SouthWest,
+    South,
+    SouthEast,
     East,
-    South
+    NorthEast,
 }
 
 public enum BoundsCheckReaction
@@ -54,6 +111,22 @@ public struct DirectionMovementState(int x, int y)
                 break;
             case CardinalDirection.North:
                 Y--;
+                break;
+            case CardinalDirection.NorthWest:
+                Y--;
+                X++;
+                break;
+            case CardinalDirection.SouthWest:
+                Y++;
+                X++;
+                break;
+            case CardinalDirection.SouthEast:
+                Y++;
+                X--;
+                break;
+            case CardinalDirection.NorthEast:
+                Y--;
+                X--;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();

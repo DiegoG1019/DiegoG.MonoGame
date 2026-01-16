@@ -35,13 +35,13 @@ public static class GridExtensions
         }
     }
 
-    public static void SnapToGrid(this IPositionable positionable, SquareGrid grid, GridPositionOffset xoffset = GridPositionOffset.None, GridPositionOffset yoffset = GridPositionOffset.None)
+    public static void SnapToGrid(this IPositionable2D positionable, SquareGrid grid, GridPositionOffset xoffset = GridPositionOffset.None, GridPositionOffset yoffset = GridPositionOffset.None)
     {
         var (x, y) = positionable.Position;
         positionable.Position = grid.GetPosition((int)(x / grid.XScale), (int)(y / grid.YScale), xoffset, yoffset);
     }
 
-    public static void SetPositionByGrid(this IPositionable positionable, SquareGrid grid, int x, int y, GridPositionOffset xoffset = GridPositionOffset.None, GridPositionOffset yoffset = GridPositionOffset.None)
+    public static void SetPositionByGrid(this IPositionable2D positionable, SquareGrid grid, int x, int y, GridPositionOffset xoffset = GridPositionOffset.None, GridPositionOffset yoffset = GridPositionOffset.None)
     {
         positionable.Position = grid.GetPosition(x, y, xoffset, yoffset);
     }

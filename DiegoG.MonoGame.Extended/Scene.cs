@@ -13,14 +13,13 @@ public class Scene : DrawableGameComponent
 
     private bool isloaded;
     
-    // TODO: Add a ServiceContainer in Scene
     public Scene(Game game) : base(game)
     {
         SceneComponents.ComponentAdded += SceneComponentsOnComponentAdded;
         SceneComponents.ComponentRemoved += SceneComponentsOnComponentRemoved;
     }
 
-    protected bool ExchangeComponentProperty<T>(T? value, ref T? field) where T : GameComponent
+    protected bool ExchangeComponentProperty<T>(T? value, ref T? field) where T : class, IGameComponent
     {
         if (value == field) return false;
             

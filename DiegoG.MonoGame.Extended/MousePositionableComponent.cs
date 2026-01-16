@@ -3,10 +3,8 @@ using Microsoft.Xna.Framework.Input;
 
 namespace DiegoG.MonoGame.Extended;
 
-public class MousePositionableComponent : GameComponent, ISpacePositionable
+public class MousePositionableComponent(Game game) : GameComponent(game), ISpacePositionable2D
 {
-    public MousePositionableComponent(Game game) : base(game) { }
-
     public GameWindow? GameWindow { get; init; }
     private Vector2 lastReadPos;
 
@@ -14,10 +12,10 @@ public class MousePositionableComponent : GameComponent, ISpacePositionable
         => (gameWindow is null ? Mouse.GetState() : Mouse.GetState(gameWindow)).Position.ToVector2();
 
     public static Vector2 GetRelativePositionIn(ISpace space, GameWindow? gameWindow = null)
-        => ISpacePositionable.TranslateSpace(GetMousePosition(gameWindow), space.InverseTransform);
+        => ISpacePositionable2D.TranslateSpace(GetMousePosition(gameWindow), space.InverseTransform);
 
     public static Vector2 GetRelativePositionIn(Matrix inverseTransform, GameWindow? gameWindow = null)
-        => ISpacePositionable.TranslateSpace(GetMousePosition(gameWindow), inverseTransform);
+        => ISpacePositionable2D.TranslateSpace(GetMousePosition(gameWindow), inverseTransform);
 
     public Vector2 Position
     {
@@ -31,8 +29,8 @@ public class MousePositionableComponent : GameComponent, ISpacePositionable
 
     public Vector2 RelativePosition
     {
-        get => ISpacePositionable.GetRelativePosition(this);
-        set => Position = ISpacePositionable.ConvertToRelativePosition(this, value);
+        get => ISpacePositionable2D.GetRelativePosition(this);
+        set => Position = ISpacePositionable2D.ConvertToRelativePosition(this, value);
     }
 
     public ISpace? Space { get; set; }

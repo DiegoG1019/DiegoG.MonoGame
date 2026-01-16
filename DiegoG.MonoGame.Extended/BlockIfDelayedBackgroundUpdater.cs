@@ -4,48 +4,30 @@ namespace DiegoG.MonoGame.Extended;
 
 public class BlockIfDelayedBackgroundUpdater : BackgroundUpdater
 {
-    public BlockIfDelayedBackgroundUpdater(Game game, IUpdateable updateable, int delayFramesBeforeBlocking) : base(game, updateable)
+    public BlockIfDelayedBackgroundUpdater(int updateDelayFramesBeforeBlocking) 
     {
-        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(delayFramesBeforeBlocking, 0);
-        DelayFramesBeforeBlock = delayFramesBeforeBlocking;
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(updateDelayFramesBeforeBlocking, 0);
+        UpdateDelayFramesBeforeBlock = updateDelayFramesBeforeBlocking;
     }
     
-    public int DelayFramesBeforeBlock { get; }
+    public int UpdateDelayFramesBeforeBlock { get; }
     public int FramesOfDelay { get; private set; }
     public event Action<BlockIfDelayedBackgroundUpdater>? WorkDelayed;
 
-    public override void Update(GameTime gameTime)
+    protected override bool CheckTaskAndAwaitIfReady(Task task)
     {
-        if (Updateable.Enabled is false) return;
-        
-        lock (Sync)
+        if (task.IsCompleted)
         {
-            if (Task is not null)
-            {
-                if (Task.IsCompleted)
-                {
-                    Task.ConfigureAwait(false).GetAwaiter().GetResult();
-                    Task = null;
-                }
-                else if (FramesOfDelay++ >= DelayFramesBeforeBlock)
-                {
-                    WorkDelayed?.Invoke(this);
-                    Task.ConfigureAwait(false).GetAwaiter().GetResult();
-                    Task = null;
-                }
-                else return;
-            }
-            
-            GameTime.TotalGameTime = gameTime.TotalGameTime;
-            GameTime.ElapsedGameTime = Stopwatch.Elapsed;
-            Stopwatch.Restart();
-            GameTime.IsRunningSlowly = gameTime.IsRunningSlowly;
-                
-            Task = Task.Run(() =>
-            {
-                // ReSharper disable once InconsistentlySynchronizedField
-                Updateable.Update(GameTime);
-            });
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+            return true;
         }
+        else if (FramesOfDelay++ >= UpdateDelayFramesBeforeBlock)
+        {
+            WorkDelayed?.Invoke(this);
+            task.ConfigureAwait(false).GetAwaiter().GetResult();
+            return true;
+        }
+        
+        return false;
     }
 }

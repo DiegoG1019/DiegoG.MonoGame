@@ -5,8 +5,32 @@ namespace DiegoG.MonoGame.Extended;
 
 public static class VectorExtensions
 {
+    public static Vector2 GetPositionFromDistanceAndAngle(float angleRadians, float distance)
+        => new Vector2(distance * float.Cos(angleRadians), distance * float.Sin(angleRadians));
+
     extension(Vector2 vec)
     {
+        /// <summary>
+        /// Calculates the angle between the current vector and <paramref name="b"/>
+        /// </summary>
+        public float AngleBetween(Vector2 b) 
+            => float.Atan2(b.Y - vec.Y, b.X - vec.X);
+
+        /// <summary>
+        /// Calculates the angle between the currenct vector and a Vector pointing upwards (x: 0, y: -1)
+        /// </summary>
+        public float AngleBetweenUp()
+            => vec.AngleBetween(new Vector2(0, -1));
+
+        /// <summary>
+        /// Calculates the Vector that would be ahead of <paramref name="vec"/> at a given angle and distance
+        /// </summary>
+        /// <remarks>
+        /// This method uses <see cref="VectorExtensions.GetPositionFromDistanceAndAngle"/> and adds the original vector to the result
+        /// </remarks>
+        public Vector2 GetVectorAhead(float angleRadians, float distance)
+            => GetPositionFromDistanceAndAngle(angleRadians, distance) + vec;
+
         public Vector2 RotateAroundCopy(Vector2 origin, float radians)
         {
             var v = vec;

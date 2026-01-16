@@ -2,6 +2,7 @@ using ImGuiNET;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended;
 
 namespace DiegoG.MonoGame.Extended;
 
@@ -32,6 +33,10 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
     public CameraType CameraType { get; set; } = CameraType.Fixed;
 
     public Vector3 TargetPosition { get; set; }
+    
+    public FacingDirection HorizontalFacingDirection { get; private set; }
+    
+    public FacingDirection VerticalFacingDirection { get; private set; }
     
     /// <summary>
     /// Gets or sets the camera's position in the world.
@@ -117,7 +122,7 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
     /// </summary>
     public Matrix World2D { get; private set; } = Matrix.Identity;
 
-    public Vector2 Center2D
+    public Vector2 ViewportCenter
     {
         get
         {
@@ -133,6 +138,8 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
 
     private void InvalidateProjection() => projectionIsValid = false;
 
+    public event Action<PerspectiveProjectionCamera>? TransformationChanged;
+
     /// <summary>
     /// update the camera.
     /// </summary>
@@ -144,6 +151,7 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
                         (float)gameTime.ElapsedGameTime.TotalSeconds;
         }
 
+        bool changed = false;
         if (worldAndViewAreValid is false)
         {
             Up = CameraType switch
@@ -157,6 +165,7 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
             World = Matrix.CreateWorld(default, Forward, Up);
             View = Matrix.CreateLookAt(Position, Forward + Position, World.Up);
             worldAndViewAreValid = true;
+            changed = true;
         }
 
         if (projectionIsValid is false)
@@ -166,7 +175,11 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
                 NearPlane, FarPlane);
             
             projectionIsValid = true;
+            changed = true;
         }
+
+        if (changed) 
+            TransformationChanged?.Invoke(this);
     }
 
     public override void Initialize()
@@ -355,6 +368,19 @@ public class PerspectiveProjectionCamera(Game game) : GameComponent(game), IDebu
         Forward = Vector3.Normalize(location - Position);
         Right = Vector3.Normalize(Vector3.Cross(Forward, Vector3.Up));
         Up = Vector3.Normalize(Vector3.Cross(Right, Forward));
+        HorizontalFacingDirection = new FacingDirection(new Vector2(Forward.X, Forward.Z).AngleBetweenUp());
+        VerticalFacingDirection = new FacingDirection(new Vector2(Forward.X, Forward.Y).AngleBetweenUp());
+    }
+
+    public void ProjectTo2DSpace(Vector3 position3d, out Vector2 position2d, out float scale, out float rotation)
+    {
+        float f = 1.0f / float.Tan(FieldOfView / 2);
+        float rangeInv = 1.0f / (NearPlane - FarPlane);
+        float aspect = Game.GraphicsDevice.Viewport.AspectRatio;
+
+        position2d = new Vector2((position3d.X * f) / aspect, position3d.Y * f);
+        scale = (NearPlane + FarPlane) * rangeInv * position3d.Z;
+        rotation = 1;
     }
 
     /// <summary>
